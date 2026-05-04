@@ -26,4 +26,25 @@ func (g *GameState) Draw() {
 			}
 		}
 	}
+
+	if g.GameOver && !g.Win {
+		rl.DrawRectangle(0, 0, screenWidth, screenHeight, rl.Fade(rl.Black, 0.8))
+
+		title := "YOU LOOSE"
+		fontSize := int32(40)
+
+		// Calculate centered X position
+		textWidth := rl.MeasureText(title, fontSize)
+		textX := (int32(rl.GetScreenWidth()) / 2) - (textWidth / 2)
+		textY := (int32(rl.GetScreenHeight()) / 2) - 20
+
+		// Draw the main text
+		rl.DrawText(title, textX, textY, fontSize, rl.Red)
+
+		// Optional: Subtitle for restarting
+		subTitle := "Press R to Restart"
+		subFontSize := int32(20)
+		subWidth := rl.MeasureText(subTitle, subFontSize)
+		rl.DrawText(subTitle, (int32(rl.GetScreenWidth())/2)-(subWidth/2), textY+60, subFontSize, rl.White)
+	}
 }

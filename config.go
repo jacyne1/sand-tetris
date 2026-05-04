@@ -3,11 +3,13 @@ package main
 const (
 	screenWidth  = 800
 	screenHeight = 600
-	GridWidth    = 160 // Screen width 800 / 5
-	GridHeight   = 120 // Screen height 600 / 5
-	CellSize     = 5
-	CellsInPiece = 4
-	BlockSize    = CellSize * CellsInPiece
+
+	CellSize         = 10
+	CellsInPiece     = 4
+	BlockSize        = CellSize * CellsInPiece
+	GridWidth        = screenWidth / CellSize
+	GridHeight       = screenHeight / CellSize
+	DangerZoneHeight = 2
 	//topMargin    = 150 // Room for Score & Turn Info
 	//bottomMargin = 50  // Room for Settings/Buttons
 	//padding      = 20
@@ -24,4 +26,6 @@ type GameState struct {
 	SquareY      float32
 	SquareActive bool
 	CurrentColor int
+	GameOver     bool
+	Win          bool
 }

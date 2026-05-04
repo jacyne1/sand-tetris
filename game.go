@@ -1,13 +1,14 @@
 package main
 
 import (
+	"fmt"
+
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func (g *GameState) Update() {
+	g.HandleInput()
 	if g.SquareActive {
-
-		g.HandleInput()
 
 		g.SquareY += 2 // Move down
 
@@ -29,7 +30,22 @@ func (g *GameState) Update() {
 			g.ConvertSquareToSand()
 		}
 	}
+	g.CheckLineClears()
 	g.UpdateSandPhysics()
+	if g.CheckDangerZone() {
+		g.GameOver = true
+		g.Win = false
+	}
+
+}
+
+func (g *GameState) CheckDangerZone() bool {
+	for x := 0; x < GridWidth; x++ {
+		if g.Grid[DangerZoneHeight][x] != Empty {
+			return true
+		}
+	}
+	return false
 }
 
 func (g *GameState) CheckCollision() bool {
@@ -126,7 +142,7 @@ func (g *GameState) UpdateSandPhysics() {
 
 func (g *GameState) SpawnNewPiece() {
 
-	randomIndex := rl.GetRandomValue(0, int32(len(ShapeLibrary)-1))
+	randomIndex := rl.GetRandomValue(0, 2) //int32(len(ShapeLibrary)-1))
 	template := ShapeLibrary[randomIndex]
 
 	g.ActiveShape = template.Matrix
@@ -160,7 +176,24 @@ func (g *GameState) CanMove(targetX, targetY float32) bool {
 	return true
 }
 
+func (g *GameState) ResetGame() {
+	for y := 0; y < GridHeight; y++ {
+		for x := 0; x < GridWidth; x++ {
+			g.Grid[y][x] = Empty
+		}
+	}
+	g.GameOver = false
+	g.SpawnNewPiece()
+}
+
 func (g *GameState) HandleInput() {
+	if g.GameOver {
+		if rl.IsKeyPressed(rl.KeyR) {
+			g.ResetGame()
+		}
+		return
+	}
+
 	if !g.SquareActive {
 		return
 	}
@@ -217,4 +250,63 @@ func (g *GameState) HandleInput() {
 			g.SquareX = oldX
 		}
 	}
+}
+
+func (g *GameState) CheckLineClears() {
+	visited := make(map[rl.Vector2]bool)
+
+	for y := 0; y < GridHeight; y++ {
+
+		startCell := rl.Vector2{X: 0, Y: float32(y)}
+
+		// If there's sand on the left side we haven't check this cluster
+		if g.Grid[y][0] != Empty && !visited[startCell] {
+
+			cluster := []rl.Vector2{}
+			reachesRight := false
+			targetColor := g.Grid[y][0]
+
+			queue := []rl.Vector2{startCell}
+			visited[startCell] = true
+
+			for len(queue) > 0 {
+				curr := queue[0]
+				queue = queue[1:]
+				cluster = append(cluster, curr)
+				//fmt.Println("Q:", queue)
+				if int(curr.X) == GridWidth-1 {
+					reachesRight = true
+				}
+
+				// Check neighbors (up, down, left, right)
+				neighbors := []rl.Vector2{
+					{X: curr.X + 1, Y: curr.Y}, {X: curr.X - 1, Y: curr.Y},
+					{X: curr.X, Y: curr.Y + 1}, {X: curr.X, Y: curr.Y - 1},
+				}
+
+				for _, n := range neighbors {
+					nx, ny := int(n.X), int(n.Y)
+					if nx >= 0 && nx < GridWidth && ny >= 0 && ny < GridHeight {
+						if !visited[n] && g.Grid[ny][nx] == targetColor {
+							visited[n] = true
+							queue = append(queue, n)
+						}
+					}
+				}
+
+			}
+
+			if reachesRight {
+				fmt.Printf("Color %d connected! Clearing %d grains.\n", targetColor, len(cluster))
+
+				for _, p := range cluster {
+					// Use the same coordinate order (y, x) that worked for your check!
+					g.Grid[int(p.Y)][int(p.X)] = Empty
+				}
+			}
+
+		}
+
+	}
+
 }

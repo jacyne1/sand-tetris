@@ -8,13 +8,15 @@ func main() {
 	rl.InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window")
 	rl.SetTargetFPS(60)
 
-	state := GameState{}
+	state := GameState{
+		GameOver: false,
+	}
 
 	state.SpawnNewPiece()
 
 	for !rl.WindowShouldClose() {
 
-		if !state.SquareActive {
+		if !state.SquareActive && !state.GameOver {
 			state.SpawnNewPiece()
 		}
 
